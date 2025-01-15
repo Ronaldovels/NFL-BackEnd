@@ -9,7 +9,7 @@ const userRegisterSchema = new mongoose.Schema({
     email: {type: String, unique: true, required: true},
     password: String,
     favoriteTeam: String,
-    gameModes: {type: String, default: ""}
+    gameModes: {type: String, default: ""},
     
 })
 
@@ -48,6 +48,37 @@ router.post ("/register", async (req, res) => {
         console.log(error)
     }
 })
+
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body; 
+  
+    try {
+   
+      const user = await UserRegister.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ error: 'Invalid credentials' });
+      }
+  
+      
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: 'Invalid credentials' }); 
+      }
+  
+      
+      const token = jwt.sign(
+        { userId: user._id, username: user.username }, 
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' } 
+      );
+  
+      
+      res.json({ token });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Server error' }); 
+    }
+  });
 
 router.patch ("/update/:id", async (req, res) => {
     const id = req.params.id;
