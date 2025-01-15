@@ -6,7 +6,9 @@ const cors = require("cors");
 const axios = require('axios')
 
 
+
 app.use(express.json());
+
 app.use(cors())
 dotenv.config()
 
@@ -23,6 +25,7 @@ mongoose.connect(url)
 const userRegisterRoute = require('./routes/userRegister')
 app.use("/", userRegisterRoute)
    
+app.use('/uploads', express.static('uploads'));
 
 
 app.listen(port, () => {
