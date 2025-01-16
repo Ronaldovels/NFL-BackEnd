@@ -8,7 +8,6 @@ const axios = require('axios')
 
 
 app.use(express.json());
-
 app.use(cors())
 dotenv.config()
 
@@ -26,6 +25,9 @@ const userRegisterRoute = require('./routes/userRegister')
 app.use("/", userRegisterRoute)
    
 app.use('/uploads', express.static('uploads'));
+
+const WeeklyTeamsRoute = require('./routes/WeeklyTeams')
+app.use('/WeeklyTeamsRoute', WeeklyTeamsRoute)
 
 
 app.listen(port, () => {
