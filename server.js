@@ -26,8 +26,8 @@ app.use("/", userRegisterRoute)
    
 app.use('/uploads', express.static('uploads'));
 
-const WeeklyTeamsRoute = require('./routes/WeeklyTeams')
-app.use('/WeeklyTeamsRoute', WeeklyTeamsRoute)
+const ThirdPartyAPIRoute = require('./routes/ThirdPartyAPI')
+app.use('/ThirdPartyAPI', ThirdPartyAPIRoute)
 
 
 app.listen(port, () => {
