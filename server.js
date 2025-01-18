@@ -30,6 +30,9 @@ app.use('/uploads', express.static('uploads'));
 const ThirdPartyAPIRoute = require('./routes/ThirdPartyAPI')
 app.use('/ThirdPartyAPI', ThirdPartyAPIRoute)
 
+const WeeklyTeamsRoute = require('./routes/WeeklyTeams')
+app.use('/weekly-teams', WeeklyTeamsRoute)
+
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
