@@ -196,7 +196,7 @@ const updateGamesData = async () => {
     if (cachedGame) {
       const hoursDifference = Math.abs(now - cachedGame.lastUpdated) / 36e5; // Diferença em horas
 
-      if (hoursDifference <= 24) {
+      if (hoursDifference <= 12) {
         console.log('Dados dos jogos carregados do cache.');
         return await Game.find(); // Retorna os jogos já armazenados no banco
       }
@@ -255,13 +255,12 @@ const updateGamesData = async () => {
 const updatePlayerStatistics = async () => {
   try {
     // Define a data fixa "2025-01-16"
-    const fixedDate = "2025-01-17";
+    const fixedDate = "2025-01-18";
 
     console.log(`Data fixa utilizada: ${fixedDate}`);
 
-    // Filtra jogos com data maior que a data fixa
-    // Agora acessamos o campo 'date.date' para a comparação
-    const games = await Game.find({ "date.date": { $gt: fixedDate } }); // Verifica jogos após a data fixa
+    
+    const games = await Game.find({ "date.date": { $gt: fixedDate } }); 
     console.log(`Jogos encontrados: ${games.length}`);
 
     const gameIds = games.map(game => game.id);
@@ -365,13 +364,16 @@ cron.schedule('00 00 00 * * 3', async () => {
   await updateTeamsData();
   await updatePlayersData();
   console.log('Atualização dos dados concluída.');
+}, {
+  timezone: 'UTC'
 });
 
-cron.schedule('00 20 02 * * 0,1,4,5,6', async () => {  
+cron.schedule('00 37 14 * * 0,1,4,5,6', async () => {  
   console.log('Requisições de jogadores e resultados...');
   await updateGamesData();
   await updatePlayerStatistics();
-  
+}, {
+  timezone: 'UTC'
 });
 
 
@@ -414,7 +416,6 @@ router.get('/players-by-position', async (req, res) => {
     const positionKeys = Object.keys(queryParams);
 
     // Log para verificar os parâmetros recebidos
-    console.log('Parâmetros de filtro recebidos:', positionKeys);
 
     for (const teamId of TEAM_IDS) {
       const cachedPlayers = await Player.find({ teamId });
