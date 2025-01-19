@@ -360,17 +360,18 @@ const updatePlayerStatistics = async () => {
 
 
 
-cron.schedule('0 0 * * 3', async () => {
+cron.schedule('00 00 00 * * 3', async () => {
   console.log('Iniciando atualização dos dados...');
   await updateTeamsData();
   await updatePlayersData();
   console.log('Atualização dos dados concluída.');
 });
 
-cron.schedule('59 23 * * 0,1,4,6', async () => {  
+cron.schedule('00 20 02 * * 0,1,4,5,6', async () => {  
   console.log('Requisições de jogadores e resultados...');
   await updateGamesData();
   await updatePlayerStatistics();
+  
 });
 
 
