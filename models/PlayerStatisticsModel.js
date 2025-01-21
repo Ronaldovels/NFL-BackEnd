@@ -15,11 +15,11 @@ const PlayerStatisticsSchema = new mongoose.Schema({
           playerId: { type: Number, required: true },
           playerName: { type: String, required: true },
           playerImage: { type: String, required: true },
+          points: { type: Number, default: 0 },
           statistics: [
             {
-              type: { type: String, required: true }, // Tipo da estatística: ataque, defesa, times especiais
               name: { type: String, required: true },
-              value: { type: String, required: true },
+              value: { type: String, required: true }
             },
           ],
         },

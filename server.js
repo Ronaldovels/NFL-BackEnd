@@ -31,7 +31,7 @@ const ThirdPartyAPIRoute = require('./routes/ThirdPartyAPI')
 app.use('/ThirdPartyAPI', ThirdPartyAPIRoute)
 
 const WeeklyTeamsRoute = require('./routes/WeeklyTeams')
-app.use('/weekly-teams', WeeklyTeamsRoute)
+app.use('/weekly-teams', WeeklyTeamsRoute)  
 
 
 app.listen(port, () => {

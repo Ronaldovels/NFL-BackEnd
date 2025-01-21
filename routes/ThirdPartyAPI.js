@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const Player = require('../models/PlayerModel');
@@ -118,7 +117,7 @@ const updatePlayersData = async () => {
                 name: player.name,
                 playerPosition: player.playerPosition,
                 teamId: player.teamId,
-                group: player.group, 
+                group: player.group,
                 image: player.image,
               });
             }
@@ -156,7 +155,7 @@ const updatePlayersData = async () => {
             name: player.name,
             playerPosition: player.position,
             teamId: teamId,
-            group: player.group, 
+            group: player.group,
             image: player.image
           };
 
@@ -196,7 +195,7 @@ const updateGamesData = async () => {
     if (cachedGame) {
       const hoursDifference = Math.abs(now - cachedGame.lastUpdated) / 36e5; // Diferença em horas
 
-      if (hoursDifference <= 12) {
+      if (hoursDifference <= 24) {
         console.log('Dados dos jogos carregados do cache.');
         return await Game.find(); // Retorna os jogos já armazenados no banco
       }
@@ -254,17 +253,14 @@ const updateGamesData = async () => {
 
 const updatePlayerStatistics = async () => {
   try {
-    // Define a data fixa "2025-01-16"
     const fixedDate = "2025-01-18";
-
     console.log(`Data fixa utilizada: ${fixedDate}`);
 
-    
-    const games = await Game.find({ "date.date": { $gt: fixedDate } }); 
+    const games = await Game.find({ "date.date": { $gt: fixedDate } });
     console.log(`Jogos encontrados: ${games.length}`);
 
     const gameIds = games.map(game => game.id);
-    console.log(gameIds)
+    console.log(gameIds);
 
     if (gameIds.length === 0) {
       console.warn("Nenhum jogo futuro encontrado.");
@@ -273,9 +269,141 @@ const updatePlayerStatistics = async () => {
 
     const statistics = [];
 
-    // Processa cada jogo futuro
+    function calculatePlayerPoints(statistics) {
+      let points = 0;
+
+      statistics.forEach(stat => {
+        const value = parseFloat(stat.value) || 0;
+        const valueStr = String(value)
+
+        switch (stat.name.toLowerCase()) {
+          case "yards":
+            points += value * 0.1;
+            break;
+          case "passing touch downs":
+            points += value * 6;
+            break;
+          case "interceptions":
+            points -= value * 2;
+            break;
+          case "two pt":
+            points += value * 2;
+            break;
+          case "comp att":
+
+            if (valueStr.includes("/")) {
+              const [comp, att] = valueStr.split("/").map(Number);
+              points += (comp / att) * 10;
+            }
+            break;
+          case "sacks":
+            if (valueStr.includes("-")) {
+              const [sacks, ydslost] = valueStr.split("-").map(Number);
+              points -= (sacks * 2 + ydslost * 0.1);
+            } else {
+              points += value * 2
+            }
+            break;
+          case "tackles":
+            points += value * 1;
+            break;
+          case "unassisted tackles":
+            points += value * 0.5;
+            break;
+          case "tfl":
+            points += value * 1;
+            break;
+          case "passes defended":
+            points += value * 1;
+            break;
+          case "qb hts":
+            points += value * 0.5;
+            break;
+          case "interceptions for touch downs":
+            points += value * 6;
+            break;
+          case "blocked kickk":
+            points += value * 2;
+            break;
+          case "kick return td":
+            points += value * 6;
+            break;
+          case "exp return td":
+            points += value * 6;
+            break;
+          case "ff":
+            points += value * 2;
+            break;
+          case "total rushes":
+            points += value * 0.1;
+            break;
+          case "rushing touch downs":
+            points += value * 6;
+            break;
+          case "targets":
+            points += value * 0.1;
+            break;
+          case "total receptions":
+            points += value * 1;
+            break;
+          case "receiving touch downs":
+            points += value * 6;
+            break;
+          case "total":
+            points -= value * 2;
+            break;
+          case "lost":
+            points -= value * 2;
+            break;
+          case "field goals":
+            if (valueStr.includes("/")) {
+              const [made, attempts] = valueStr.split("/").map(Number);
+              points += made * 3;
+            }
+            break;
+          case "field goals from 1 19 yards":
+            points += value * 3;
+            break;
+          case "field goals from 20 29 yards":
+            points += value * 3;
+            break;
+          case "field goals from 30 39 yards":
+            points += value * 3;
+            break;
+          case "field goals from 40 49 yards":
+            points += value * 4;
+            break;
+          case "field goals from 50 yards":
+            points += value * 5;
+            break;
+          case "extra point":
+            if (valueStr.includes("/")) {
+              const [made, attempts] = valueStr.split("/").map(Number);
+              points += made * 1;
+            }
+            break;
+          case "touchbacks":
+            points += value * 0.5;
+            break;
+          case "in20":
+            points += value * 0.5;
+            break;
+
+          case "in20":
+            points += value * 2
+            break;
+
+
+          default:
+            // Caso a estatística não tenha um cálculo definido
+            break;
+        }
+      });
+
+      return points.toFixed(2);
+    }
+
     for (const gameId of gameIds) {
-      // Verifica se já existe estatística em cache para o jogo atual
       const cachedStatistics = await PlayerStatistics.findOne({ gameId });
 
       if (cachedStatistics) {
@@ -284,7 +412,6 @@ const updatePlayerStatistics = async () => {
         continue;
       }
 
-      // Faz a requisição para a API
       const response = await axios.get("https://v1.american-football.api-sports.io/games/statistics/players", {
         params: { id: gameId },
         headers: {
@@ -295,13 +422,11 @@ const updatePlayerStatistics = async () => {
 
       const stats = response.data.response;
 
-      // Verifica se encontrou dados para o jogo
       if (!stats || stats.length === 0) {
         console.warn(`Estatísticas não encontradas para o jogo ${gameId}`);
         continue;
       }
 
-      // Salva no banco de dados
       const bulkInserts = [];
 
       // Processa cada time no jogo (um por vez)
@@ -314,15 +439,22 @@ const updatePlayerStatistics = async () => {
           teamLogo: game.team.logo,
           groups: game.groups.map(group => ({
             groupName: group.name,
-            players: group.players.map(player => ({
-              playerId: player.player.id,
-              playerName: player.player.name,
-              playerImage: player.player.image,
-              statistics: player.statistics.map(stat => ({
-                name: stat.name,
-                value: stat.value,
-              })),
-            })),
+            players: group.players.map(player => {
+              // Calcula a pontuação do jogador
+              const points = calculatePlayerPoints(player.statistics);
+
+
+              return {
+                playerId: player.player.id,
+                playerName: player.player.name,
+                playerImage: player.player.image,
+                points,
+                statistics: player.statistics.map(stat => ({
+                  name: stat.name,
+                  value: stat.value || 0, // Garante um valor padrão para evitar problemas
+                })),
+              };
+            }),
           })),
           lastUpdated: new Date(),
         };
@@ -368,7 +500,7 @@ cron.schedule('00 00 00 * * 3', async () => {
   timezone: 'UTC'
 });
 
-cron.schedule('00 37 14 * * 0,1,4,5,6', async () => {  
+cron.schedule('00 37 14 * * 0,1,4,5,6', async () => {
   console.log('Requisições de jogadores e resultados...');
   await updateGamesData();
   await updatePlayerStatistics();
@@ -435,7 +567,7 @@ router.get('/players-by-position', async (req, res) => {
                 name: player.name,
                 playerPosition: player.playerPosition,
                 teamId: player.teamId,
-                group: player.group, 
+                group: player.group,
                 image: player.image
               });
             }
@@ -473,7 +605,7 @@ router.get('/players-by-position', async (req, res) => {
             name: player.name,
             playerPosition: player.position,
             teamId: teamId,
-            group: player.group, 
+            group: player.group,
             image: player.image,
           };
 
@@ -522,8 +654,8 @@ router.get('/players-by-position', async (req, res) => {
 
 router.get('/games-info', async (req, res) => {
   try {
-    const games = await updateGamesData(); 
-    res.json({data: games});
+    const games = await updateGamesData();
+    res.json({ data: games });
   } catch (error) {
     console.error('Erro ao atualizar os jogos:', error.message);
     res.status(500).json({ error: 'Erro ao atualizar os jogos.' });
@@ -531,10 +663,62 @@ router.get('/games-info', async (req, res) => {
 });
 
 router.get("/games/statistics/player", async (req, res) => {
+  const { gameId, playerId } = req.query; // Obtém gameId e playerId da URL
+
+  try {
+    // Monta a query base dinamicamente
+    const query = {};
+
+    if (gameId) {
+      query.gameId = parseInt(gameId);
+    }
+
+    // Busca os documentos no banco de dados
+    const statistics = await PlayerStatistics.find(query).lean();
+
+    if (!statistics || statistics.length === 0) {
+      return res.status(404).json({ error: "Nenhuma estatística encontrada com os critérios fornecidos." });
+    }
+
+    // Filtra os dados se playerId for fornecido
+    let filteredStatistics = statistics;
+
+    if (playerId) {
+      const playerIdNumber = parseInt(playerId);
+
+      // Filtramos os jogadores em cada grupo e removemos grupos vazios
+      filteredStatistics = statistics.map(stat => ({
+        ...stat,
+        groups: stat.groups.map(group => ({
+          ...group,
+          players: group.players.filter(player => player.playerId === playerIdNumber), // Filtra jogadores pelo playerId
+        })).filter(group => group.players.length > 0), // Remove grupos sem jogadores
+      })).filter(stat => stat.groups.length > 0); // Remove documentos sem grupos válidos
+    }
+
+    // Remove duplicatas se, por algum motivo, a lógica acima ainda permitir repetições
+    const uniqueResults = filteredStatistics.map(stat => ({
+      ...stat,
+      groups: stat.groups.map(group => ({
+        ...group,
+        players: Array.from(new Set(group.players.map(player => JSON.stringify(player)))).map(player => JSON.parse(player)), // Remove jogadores duplicados
+      })),
+    }));
+
+    // Retorna os dados filtrados
+    res.json(uniqueResults);
+  } catch (error) {
+    console.error(`Erro ao buscar estatísticas dos jogos:`, error.message);
+    res.status(500).json({ error: "Erro ao buscar estatísticas dos jogos." });
+  }
+});
+
+
+router.get("/games/statistics/update", async (req, res) => {
   try {
     // Chama a função de atualização das estatísticas sem precisar do playerId
     const statistics = await updatePlayerStatistics(); // A função agora não precisa de playerId
-    
+
     if (!statistics) {
       return res.status(404).json({ error: "Nenhuma estatística encontrada para os jogos futuros." });
     }
@@ -546,6 +730,7 @@ router.get("/games/statistics/player", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar estatísticas dos jogos." });
   }
 });
+
 
 
 
