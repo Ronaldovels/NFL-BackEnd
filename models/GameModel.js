@@ -2,63 +2,82 @@ const mongoose = require('mongoose');
 
 const GameSchema = new mongoose.Schema({
     id: { type: Number, required: true, unique: true },
-    stage: { type: String },
-    week: { type: String },
-    date: {
-        timezone: { type: String },
-        date: { type: String },
-        time: { type: String },
-        timestamp: { type: Number },
-    },
-    venue: {
-        name: { type: String },
-        city: { type: String },
-    },
-    status: {
-        short: { type: String },
-        long: { type: String },
-        timer: { type: String, default: null },
-    },
-    league: {
+    name: { type: String },
+    tournament: {
         id: { type: Number },
         name: { type: String },
-        season: { type: String },
-        logo: { type: String },
-        country: {
-            name: { type: String },
-            code: { type: String },
-            flag: { type: String },
-        },
+        importance: { type: Number },
+    },
+    season: {
+        id: { type: Number },
+        name: { type: String },
+        statisticsType: { type: String },
+    },
+    status: {
+        type: { type: String },
+        reason: { type: String },
+    },
+    arena: {
+        id: { type: Number },
+        name: { type: String },
+        imageHash: { type: String },
     },
     teams: {
         home: {
             id: { type: Number },
             name: { type: String },
-            logo: { type: String },
+            logoHash: { type: String },
+            score: {
+                current: { type: Number },
+                display: { type: Number },
+                period_1: { type: Number },
+                period_2: { type: Number },
+                period_3: { type: Number },
+                period_4: { type: Number },
+                defaultTime: { type: Number },
+            },
         },
         away: {
             id: { type: Number },
             name: { type: String },
-            logo: { type: String },
+            logoHash: { type: String },
+            score: {
+                current: { type: Number },
+                display: { type: Number },
+                period_1: { type: Number },
+                period_2: { type: Number },
+                period_3: { type: Number },
+                period_4: { type: Number },
+                defaultTime: { type: Number },
+            },
         },
     },
-    scores: {
+    times: {
+        specificStartTime: { type: String },
+        startTime: { type: String },
+        duration: { type: Number },
+    },
+    coaches: {
         home: {
-            quarter_1: { type: Number, default: null },
-            quarter_2: { type: Number, default: null },
-            quarter_3: { type: Number, default: null },
-            quarter_4: { type: Number, default: null },
-            overtime: { type: Number, default: null },
-            total: { type: Number, default: null },
+            id: { type: Number },
+            name: { type: String },
+            imageHash: { type: String },
         },
         away: {
-            quarter_1: { type: Number, default: null },
-            quarter_2: { type: Number, default: null },
-            quarter_3: { type: Number, default: null },
-            quarter_4: { type: Number, default: null },
-            overtime: { type: Number, default: null },
-            total: { type: Number, default: null },
+            id: { type: Number },
+            name: { type: String },
+            imageHash: { type: String },
         },
+    },
+    league: {
+        id: { type: Number },
+        name: { type: String },
+        logoHash: { type: String },
+    },
+    class: {
+        id: { type: Number },
+        name: { type: String },
+        imageHash: { type: String },
     },
     lastUpdated: { type: Date, default: Date.now }, // Controle de cache
 });
